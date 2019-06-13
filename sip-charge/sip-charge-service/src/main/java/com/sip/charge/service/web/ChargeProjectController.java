@@ -66,7 +66,7 @@ public class ChargeProjectController {
 
 
     @PostMapping("posts")
-    public ResponseEntity<String> createProject(ChargeProjectModel projectModel) {
+    public ResponseEntity<String> createProject(@RequestBody ChargeProjectModel projectModel) {
         chargeProjectService.createProject(projectModel);
         return ResponseEntity.ok("create success");
     }
