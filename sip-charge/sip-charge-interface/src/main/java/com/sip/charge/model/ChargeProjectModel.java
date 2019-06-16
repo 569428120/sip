@@ -1,13 +1,15 @@
 package com.sip.charge.model;
 
 
-import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.sip.common.model.BaseModel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.format.annotation.DateTimeFormat;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 @Data
@@ -21,12 +23,14 @@ public class ChargeProjectModel extends BaseModel {
     /**
      * 开始时间
      */
-    @DateTimeFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date startTime;
     /**
      * 结束时间
      */
-    @DateTimeFormat(pattern="yyyy-MM-dd")
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private Date endTime;
     /**
      * 描述
@@ -34,8 +38,15 @@ public class ChargeProjectModel extends BaseModel {
     private String description;
 
     /**
-     * 逻辑删除
+     * 总金额
      */
-    @TableLogic
-    private Boolean logicDel;
+    @TableField(exist = false)
+    private BigDecimal amountCount;
+
+    /**
+     * 总人数
+     */
+    @TableField(exist = false)
+    private Integer personnelSum;
+
 }

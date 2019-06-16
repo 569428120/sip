@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional
+@Transactional(rollbackFor = Exception.class)
 public class ChargeProjectService extends BaseService<ChargeProjectMapper, ChargeProjectModel> implements IChargeProjectService {
     /**
      * 分页查询
@@ -23,6 +23,7 @@ public class ChargeProjectService extends BaseService<ChargeProjectMapper, Charg
      * @param pageSize     每页显示的数据量
      * @return PageResult
      */
+    @Transactional(readOnly = true)
     @Override
     public PageResult getListPage(ChargeProjectModel projectModel, Integer page, Integer pageSize) {
         return this.selectPage(new Page<ChargeProjectModel>(page, pageSize), new QueryWrapper<ChargeProjectModel>()
@@ -30,6 +31,7 @@ public class ChargeProjectService extends BaseService<ChargeProjectMapper, Charg
                 .ge(projectModel.getStartTime() != null, "start_time", projectModel.getStartTime())
                 .le(projectModel.getEndTime() != null, "end_time", projectModel.getEndTime())
         );
+
     }
 
     /**

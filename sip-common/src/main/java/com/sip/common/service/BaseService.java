@@ -9,14 +9,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sip.common.exception.SipException;
 import com.sip.common.model.BaseModel;
 import com.sip.common.vo.PageResult;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
+@Slf4j
 public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends ServiceImpl<M, T> implements IBaseService<T> {
 
     private void initTenant(QueryWrapper wrapper) {
         wrapper.eq("tenant_id", 111);
+        wrapper.orderBy(true, false, "create_time");
     }
 
     private void initTenant(T model) {
@@ -29,7 +35,7 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
 
 
     @Override
-    public List<T> selectList(QueryWrapper wrapper) {
+    public List<T> selectList(QueryWrapper<T> wrapper) {
         this.initTenant(wrapper);
         return this.list(wrapper);
     }
@@ -84,12 +90,39 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
      * @return PageResult
      */
     @Override
-    public PageResult<T> selectPage(Page<T> page, Wrapper<T> wrapper) {
+    public PageResult<T> selectPage(Page<T> page, QueryWrapper<T> wrapper) {
+        this.initTenant(wrapper);
         IPage<T> iPage = this.baseMapper.selectPage(page, wrapper);
         if (iPage == null) {
             throw new SipException("selectPage error");
         }
         return new PageResult<T>(iPage.getTotal(), (int) iPage.getPages(), iPage.getRecords());
+    }
+
+    /**
+     * 批量删除
+     *
+     * @param ids ids
+     */
+    @Override
+    public void deleteByIds(List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            log.info("ids is null");
+            return;
+        }
+        //转换为long类型的
+        List<Long> longIds = new ArrayList<>(ids.size());
+        ids.forEach(id -> {
+            if (!StringUtils.isBlank(id)) {
+                longIds.add(Long.valueOf(id));
+            }
+        });
+
+        if (longIds.isEmpty()) {
+            log.info("longIds is null");
+            return;
+        }
+        this.removeByIds(longIds);
     }
 
 

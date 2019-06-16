@@ -8,6 +8,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/charge-project")
@@ -47,8 +48,8 @@ public class ChargeProjectController {
      * @return ResponseEntity<String>
      */
     @DeleteMapping("/deletes/del-by-id")
-    public ResponseEntity<String> deleteById(@RequestParam(value = "projectId", defaultValue = "") Long projectId) {
-        chargeProjectService.deleteById(projectId);
+    public ResponseEntity<String> deleteById(@RequestParam(value = "projectIds", defaultValue = "") String projectIds) {
+        chargeProjectService.deleteByIds(Arrays.asList(projectIds.split(",")));
         return ResponseEntity.ok("delete success");
     }
 
@@ -59,7 +60,7 @@ public class ChargeProjectController {
      * @return ResponseEntity<String>
      */
     @PutMapping("/updates/update-by-id")
-    public ResponseEntity<String> updateModel(ChargeProjectModel projectModel) {
+    public ResponseEntity<String> updateModel(@RequestBody ChargeProjectModel projectModel) {
         chargeProjectService.updateProject(projectModel);
         return ResponseEntity.ok("update success");
     }

@@ -15,7 +15,7 @@ public interface IBaseService<T extends BaseModel> {
      * @param wrapper 条件
      * @return List<T>
      */
-    List<T> selectList(QueryWrapper wrapper);
+    List<T> selectList(QueryWrapper<T> wrapper);
 
     /**
      * 批量插入
@@ -54,7 +54,13 @@ public interface IBaseService<T extends BaseModel> {
      * @param wrapper 过滤条件
      * @return PageResult
      */
-    PageResult<T> selectPage(Page<T> page, Wrapper<T> wrapper);
+    PageResult<T> selectPage(Page<T> page, QueryWrapper<T> wrapper);
 
 
+    /**
+     * 批量删除
+     *
+     * @param ids ids
+     */
+    void deleteByIds(List<String> ids);
 }
