@@ -44,7 +44,7 @@ public class ChargeProjectController {
     /**
      * 根据项目id删除数据
      *
-     * @param projectId 项目id
+     * @param projectIds 项目id
      * @return ResponseEntity<String>
      */
     @DeleteMapping("/deletes/del-by-id")

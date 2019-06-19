@@ -1,0 +1,19 @@
+server:
+  port: 10086
+spring:
+  application:
+    name: ly-registry
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/ureport_db?useUnicode=true&characterEncoding=utf-8&serverTimezone=UTC&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: Chengxuyuan1
+#ureport:
+#  fileStoreDir: G:/tool/ureportfiles
+## 更改 ureport2 的保存目录(需真实存在的目录)
+# ureport.fileStoreDir=G:/tool/ureportfiles
+##
+## 如若不需要更改:
+## 1.web项目：默认在项目web\web-inf\ureportfiles下
+## 2.spring boot项目：
+##   C:\Users\用户名\AppData\Local\Temp\tomcat-docbase.??.8080\WEB-INF\ureportfiles 下

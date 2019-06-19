@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 @RestController
 @RequestMapping("/system-route")
@@ -24,7 +23,7 @@ public class SysRouteController {
      * @return ResponseEntity<List < SysBoardingTypeModel>>
      */
     @GetMapping("/gets/all")
-    public ResponseEntity<List<SysRouteModel>> getSysBoardings() {
-        return ResponseEntity.ok(sysRouteService.selectList(new QueryWrapper()));
+    public ResponseEntity getSysBoardings() {
+        return ResponseEntity.ok(sysRouteService.selectList(new QueryWrapper<SysRouteModel>()));
     }
 }
