@@ -17,6 +17,9 @@ public class ChargeDetailsModel extends BaseModel {
     public static final String CHARGE_TYPE_ITEM = "charge_item";
     public static final String CHARGE_TYPE_TYPE = "charge_type";
 
+    public static final Integer TRAFFIC_TRUE = 1;
+    public static final Integer TRAFFIC_FALSE = 1;
+
     /**
      * 所属收费项目的id
      */

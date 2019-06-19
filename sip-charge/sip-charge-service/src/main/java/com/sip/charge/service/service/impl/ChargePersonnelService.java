@@ -14,11 +14,13 @@ import com.sip.charge.vo.ChargePersonnelVo;
 import com.sip.common.service.BaseService;
 import com.sip.common.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -96,7 +98,67 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     private Map<Long, List<ChargeDetailsModel>> getChargeDetailsMap(List<ChargePersonnelModel> chargePersonnelModels) {
         List<ChargeDetailsModel> chargeDetailsModels = chargeDetailsService.selectList(new QueryWrapper<>());
-        return null;
+        Map<Long, List<ChargeDetailsModel>> reductionMap = new HashMap<>(chargePersonnelModels.size());
+        if (chargeDetailsModels == null || chargeDetailsModels.isEmpty()) {
+            return reductionMap;
+        }
+        // 转换成 寄读方式和收费项的map 以及路线的收费map
+        Map<String, List<ChargeDetailsModel>> boardingMap = new HashMap<>(3);
+        Map<String, List<ChargeDetailsModel>> routeMap = new HashMap<>(10);
+        chargeDetailsModels.forEach(item -> {
+            // 交通费用
+            if (ChargeDetailsModel.TRAFFIC_TRUE.equals(item.getTraffic()) && StringUtils.isNotBlank(item.getRoutesCode())) {
+                List<ChargeDetailsModel> routeCharges = routeMap.computeIfAbsent(item.getRoutesCode(), k -> new ArrayList<>(10));
+                routeCharges.add(item);
+                return;
+            }
+            // 寄读方式
+            String boardingCodes = item.getBoardingCodes();
+            if (StringUtils.isBlank(boardingCodes)) {
+                return;
+            }
+            List<String> boardingCodeList = Arrays.asList(boardingCodes.split(","));
+            boardingCodeList.forEach(code -> {
+                List<ChargeDetailsModel> boardingCharges = boardingMap.computeIfAbsent(code, k -> new ArrayList<>(10));
+                boardingCharges.add(item);
+            });
+        });
+
+        chargePersonnelModels.forEach(item -> {
+            List<ChargeDetailsModel> models = reductionMap.computeIfAbsent(item.getId(), k -> new ArrayList<>(10));
+            // 需要乘车
+            if (item.getRide()) {
+                List<ChargeDetailsModel> routeCharges = routeMap.get(item.getRoutesCode());
+                if (routeCharges != null) {
+                    models.addAll(routeCharges);
+                }
+            }
+            List<ChargeDetailsModel> boardingCharges = boardingMap.get(item.getBoardingCode());
+            if (boardingCharges != null) {
+                models.addAll(boardingCharges);
+            }
+        });
+
+        return reductionMap;
+    }
+
+    /**
+     * 金额统计数量
+     *
+     * @param chargePersonnelModels chargePersonnelModels
+     * @return Map<Long, BigDecimal>
+     */
+    private Map<Long, BigDecimal> getChargeDetailsAmountSumMap(List<ChargePersonnelModel> chargePersonnelModels) {
+        Map<Long, BigDecimal> amountMap = new HashMap<>(chargePersonnelModels.size());
+        Map<Long, List<ChargeDetailsModel>> detailsMap = this.getChargeDetailsMap(chargePersonnelModels);
+        if (detailsMap == null || detailsMap.isEmpty()) {
+            return amountMap;
+        }
+        detailsMap.forEach((id, models) -> {
+            BigDecimal amountSum = models.stream().map(ChargeDetailsModel::getAmount).reduce(BigDecimal::add).get();
+            amountMap.put(id, amountSum);
+        });
+        return amountMap;
     }
 
     /**
@@ -125,7 +187,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
         Map<Long, List<PersonnelReductionModel>> reductionMap = this.getPersonnelReductionMap(chargePersonnelIds);
 
         // 费用信息
-        Map<Long, List<ChargeDetailsModel>> chargeDetailsMap = this.getChargeDetailsMap(chargePersonnelModels);
+        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModels);
 
         // 转换为VO
         List<ChargePersonnelVo> chargePersonnelVos = chargePersonnelModels.stream().map(item -> {
@@ -135,6 +197,8 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
             vo.setContacts(contactMap.get(vo.getId()));
             // 设置减免信息
             vo.setReductions(reductionMap.get(vo.getId()));
+            // 金额
+            vo.setAmountSum(chargeDetailsMap.get(vo.getId()));
             return vo;
         }).collect(Collectors.toList());
 

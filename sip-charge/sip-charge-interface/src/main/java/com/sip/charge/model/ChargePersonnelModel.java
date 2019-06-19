@@ -2,6 +2,7 @@ package com.sip.charge.model;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sip.common.model.BaseModel;
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -31,6 +32,11 @@ public class ChargePersonnelModel extends BaseModel {
      * 寄读方式
      */
     private String boardingCode;
+
+    /**
+     * 是否需要乘车
+     */
+    private Boolean ride;
 
 
     /**
