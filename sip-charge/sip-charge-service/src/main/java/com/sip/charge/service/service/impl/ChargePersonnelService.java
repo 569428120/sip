@@ -11,8 +11,10 @@ import com.sip.charge.service.service.IChargePersonnelService;
 import com.sip.charge.service.service.IPersonnelContactService;
 import com.sip.charge.service.service.IPersonnelReductionService;
 import com.sip.charge.vo.ChargePersonnelVo;
+import com.sip.common.exception.SipException;
 import com.sip.common.service.BaseService;
 import com.sip.common.vo.PageResult;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -175,7 +177,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
         List<ChargePersonnelModel> chargePersonnelModels = personnelMapper.getChargePersonnelModelsPage(personnelModel, page, pageSize);
         if (chargePersonnelModels == null || chargePersonnelModels.isEmpty()) {
             log.info("chargePersonnelModels is null");
-            return null;
+            return new PageResult<>(0L, Collections.emptyList());
         }
 
         List<Long> chargePersonnelIds = chargePersonnelModels.stream().map(ChargePersonnelModel::getId).collect(Collectors.toList());
@@ -190,20 +192,34 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
         Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModels);
 
         // 转换为VO
-        List<ChargePersonnelVo> chargePersonnelVos = chargePersonnelModels.stream().map(item -> {
-            ChargePersonnelVo vo = new ChargePersonnelVo();
-            BeanUtils.copyProperties(item, vo);
-            // 设置联系方式
-            vo.setContacts(contactMap.get(vo.getId()));
-            // 设置减免信息
-            vo.setReductions(reductionMap.get(vo.getId()));
-            // 金额
-            vo.setAmountSum(chargeDetailsMap.get(vo.getId()));
-            return vo;
-        }).collect(Collectors.toList());
+        List<ChargePersonnelVo> chargePersonnelVos = chargePersonnelModels.stream().map(item -> this.newChargePersonnelVo(item, contactMap, reductionMap, chargeDetailsMap)).collect(Collectors.toList());
 
         Long count = personnelMapper.getChargePersonnelModelsCount(personnelModel);
         return new PageResult<>(count, chargePersonnelVos);
+    }
+
+
+    /**
+     * 创建vo
+     *
+     * @param model            model
+     * @param contactMap       联系人
+     * @param reductionMap     减免
+     * @param chargeDetailsMap 收费项
+     * @return ChargePersonnelVo
+     */
+    private ChargePersonnelVo newChargePersonnelVo(ChargePersonnelModel model, Map<Long, List<PersonnelContactModel>> contactMap,
+                                                   Map<Long, List<PersonnelReductionModel>> reductionMap, Map<Long, BigDecimal> chargeDetailsMap) {
+        ChargePersonnelVo vo = new ChargePersonnelVo();
+        BeanUtils.copyProperties(model, vo);
+        // 设置联系方式
+        vo.setContacts(contactMap.get(vo.getId()));
+        // 设置减免信息
+        vo.setReductions(reductionMap.get(vo.getId()));
+        // 金额
+        vo.setAmountSum(chargeDetailsMap.get(vo.getId()));
+
+        return vo;
     }
 
 
@@ -215,7 +231,24 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public ChargePersonnelVo getChargePersonnelVoById(Long personnelId) {
-        return null;
+        ChargePersonnelModel chargePersonnelModel = this.selectById(personnelId);
+        if (chargePersonnelModel == null) {
+            log.error("chargePersonnelModel is null by personnelId {}", personnelId);
+            throw new SipException("chargePersonnelModel is null by personnelId " + personnelId);
+        }
+        List<Long> chargePersonnelIds = new ArrayList<>(1);
+        chargePersonnelIds.add(personnelId);
+        List<ChargePersonnelModel> chargePersonnelModels = new ArrayList<>(1);
+        chargePersonnelModels.add(chargePersonnelModel);
+
+        // 联系方式
+        Map<Long, List<PersonnelContactModel>> contactMap = this.getPersonnelContactMap(chargePersonnelIds);
+        // 减免信息
+        Map<Long, List<PersonnelReductionModel>> reductionMap = this.getPersonnelReductionMap(chargePersonnelIds);
+        // 费用信息
+        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModels);
+
+        return this.newChargePersonnelVo(chargePersonnelModel, contactMap, reductionMap, chargeDetailsMap);
     }
 
     /**
@@ -225,7 +258,27 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public void deleteChargePersonnel(List<String> personnelIds) {
+        if (personnelIds == null || personnelIds.isEmpty()) {
+            log.info("personnelIds is null");
+            return;
+        }
+        this.deleteByIds(personnelIds);
+    }
 
+    /**
+     * 校验
+     *
+     * @param personnelModel personnelModel
+     */
+    @NonNull
+    private void checkParams(@NonNull ChargePersonnelModel personnelModel) {
+        // 学号不能重复
+        List<ChargePersonnelModel> chargePersonnelModels = this.selectList(new QueryWrapper<ChargePersonnelModel>()
+                .eq("student_id", personnelModel.getStudentId())
+        );
+        if (chargePersonnelModels != null && !chargePersonnelModels.isEmpty()) {
+            throw new SipException("学号:" + personnelModel.getStudentId() + "已存在");
+        }
     }
 
     /**
@@ -235,7 +288,8 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public void updatePersonnel(ChargePersonnelModel personnelModel) {
-
+        this.checkParams(personnelModel);
+        this.insert(personnelModel);
     }
 
     /**
@@ -245,6 +299,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public void createPersonnel(ChargePersonnelModel personnelModel) {
-
+        this.checkParams(personnelModel);
+        this.updateById(personnelModel);
     }
 }
