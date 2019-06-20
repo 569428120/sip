@@ -66,6 +66,12 @@ public class ChargeProjectController {
     }
 
 
+    /**
+     * 创建
+     *
+     * @param projectModel projectModel
+     * @return ResponseEntity<String>
+     */
     @PostMapping("posts")
     public ResponseEntity<String> createProject(@RequestBody ChargeProjectModel projectModel) {
         chargeProjectService.createProject(projectModel);
