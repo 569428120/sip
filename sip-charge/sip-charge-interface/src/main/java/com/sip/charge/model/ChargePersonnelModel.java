@@ -2,7 +2,6 @@ package com.sip.charge.model;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sip.common.model.BaseModel;
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
