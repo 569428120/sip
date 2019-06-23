@@ -2,6 +2,7 @@ package com.sip.common.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -11,6 +12,7 @@ import com.sip.common.model.BaseModel;
 import com.sip.common.vo.PageResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +27,12 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
         wrapper.orderBy(true, false, "create_time");
     }
 
+    private void initTenant(UpdateWrapper wrapper) {
+        wrapper.eq("tenant_id", 111);
+        wrapper.orderBy(true, false, "create_time");
+    }
+
+
     private void initTenant(T model) {
         model.setTenantId(111L);
     }
@@ -34,6 +42,7 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
     }
 
 
+    @Transactional(readOnly = true)
     @Override
     public List<T> selectList(QueryWrapper<T> wrapper) {
         this.initTenant(wrapper);
@@ -89,6 +98,7 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
      * @param wrapper 过滤条件
      * @return PageResult
      */
+    @Transactional(readOnly = true)
     @Override
     public PageResult<T> selectPage(Page<T> page, QueryWrapper<T> wrapper) {
         this.initTenant(wrapper);
@@ -123,6 +133,12 @@ public class BaseService<M extends BaseMapper<T>, T extends BaseModel> extends S
             return;
         }
         this.removeByIds(longIds);
+    }
+
+    @Override
+    public void delete(UpdateWrapper<T> wrapper) {
+        this.initTenant(wrapper);
+        this.remove(wrapper);
     }
 
 

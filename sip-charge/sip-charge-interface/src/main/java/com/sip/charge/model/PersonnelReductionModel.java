@@ -21,10 +21,6 @@ public class PersonnelReductionModel extends BaseModel {
     private Long personnelId;
 
     /**
-     * 减免类型 如书本费
-     */
-    private String reductionType;
-    /**
      * 操作人id
      */
     private Long operationId;

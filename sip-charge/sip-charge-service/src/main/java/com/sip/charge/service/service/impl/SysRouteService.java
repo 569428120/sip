@@ -8,6 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional(rollbackFor = Exception.class)
 public class SysRouteService extends BaseService<SysRouteMapper, SysRouteModel> implements ISysRouteService {
 }

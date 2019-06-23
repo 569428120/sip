@@ -1,6 +1,7 @@
 package com.sip.charge.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.sip.charge.model.ChargeDetailsModel;
 import com.sip.charge.model.ChargePersonnelModel;
 import com.sip.charge.model.PersonnelContactModel;
@@ -54,7 +55,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
     private Map<Long, List<PersonnelContactModel>> getPersonnelContactMap(List<Long> chargePersonnelIds) {
 
         //  查询联系方式
-        List<PersonnelContactModel> personnelContactModels = personnelContactService.list(new QueryWrapper<PersonnelContactModel>()
+        List<PersonnelContactModel> personnelContactModels = personnelContactService.selectList(new QueryWrapper<PersonnelContactModel>()
                 .in("personnel_id", chargePersonnelIds)
         );
         Map<Long, List<PersonnelContactModel>> contactMap = new HashMap<>(chargePersonnelIds.size());
@@ -76,7 +77,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      * @return Map<Long, List < PersonnelReductionModel>>
      */
     private Map<Long, List<PersonnelReductionModel>> getPersonnelReductionMap(List<Long> chargePersonnelIds) {
-        List<PersonnelReductionModel> personnelReductionModels = personnelReductionService.list(new QueryWrapper<PersonnelReductionModel>()
+        List<PersonnelReductionModel> personnelReductionModels = personnelReductionService.selectList(new QueryWrapper<PersonnelReductionModel>()
                 .in("personnel_id", chargePersonnelIds)
         );
         Map<Long, List<PersonnelReductionModel>> reductionMap = new HashMap<>(chargePersonnelIds.size());
@@ -262,6 +263,12 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
             log.info("personnelIds is null");
             return;
         }
+        personnelContactService.delete(new UpdateWrapper<PersonnelContactModel>()
+                .in("personnel_id", personnelIds)
+        );
+        personnelReductionService.delete(new UpdateWrapper<PersonnelReductionModel>()
+                .in("personnel_id", personnelIds)
+        );
         this.deleteByIds(personnelIds);
     }
 

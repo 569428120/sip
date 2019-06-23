@@ -18,18 +18,6 @@ public class PersonnelContactController {
     @Resource
     private IPersonnelContactService personnelContactService;
 
-    /**
-     * 获取分页数据
-     *
-     * @return ResponseEntity<PageResult>
-     */
-    @GetMapping("/gets/page")
-    public ResponseEntity<PageResult> getListPage(ChargePersonnelModel personnelModel,
-                                                  @RequestParam(value = "page", defaultValue = "1") Integer page,
-                                                  @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize) {
-
-        return ResponseEntity.ok(personnelContactService.getPersonnelContactPage(personnelModel, page, pageSize));
-    }
 
     /**
      * 查询联系方式
@@ -64,7 +52,7 @@ public class PersonnelContactController {
     @PutMapping("/puts")
     public ResponseEntity<String> updateModels(@RequestBody List<PersonnelContactModel> contactModels,
                                                @RequestParam(value = "personnelIds", defaultValue = "") String personnelIds) {
-        personnelContactService.putPersonnelContacts(personnelIds, contactModels);
+        personnelContactService.putPersonnelContacts(Arrays.asList(personnelIds.split(",")), contactModels);
         return ResponseEntity.ok("update success");
     }
 

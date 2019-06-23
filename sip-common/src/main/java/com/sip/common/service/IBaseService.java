@@ -2,6 +2,7 @@ package com.sip.common.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.sip.common.model.BaseModel;
 import com.sip.common.vo.PageResult;
@@ -63,4 +64,6 @@ public interface IBaseService<T extends BaseModel> {
      * @param ids ids
      */
     void deleteByIds(List<String> ids);
+
+    void delete(UpdateWrapper<T> wrapper);
 }
