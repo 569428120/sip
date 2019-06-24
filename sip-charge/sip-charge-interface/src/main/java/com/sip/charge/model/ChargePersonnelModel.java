@@ -12,6 +12,11 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_sip_charge_personnel")
 public class ChargePersonnelModel extends BaseModel {
+
+    /**
+     * 项目id
+     */
+    private String projectId;
     /**
      * 学号
      */
