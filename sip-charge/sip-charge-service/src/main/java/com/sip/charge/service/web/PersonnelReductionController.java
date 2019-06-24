@@ -43,6 +43,19 @@ public class PersonnelReductionController {
         return ResponseEntity.ok("delete success");
     }
 
+    /**
+     * 更新
+     *
+     * @param reductionModel 数据
+     * @return ResponseEntity<String>
+     */
+    @PostMapping("/posts/post-by-personnel-ids")
+    public ResponseEntity<String> addPersonnelReductionModel(@RequestBody PersonnelReductionModel reductionModel,
+                                                             @RequestParam(value = "personnelIds", defaultValue = "") String personnelIds) {
+        personnelReductionService.addPersonnelReductions(Arrays.asList(personnelIds.split(",")), reductionModel);
+        return ResponseEntity.ok("update success");
+    }
+
 
     /**
      * 更新

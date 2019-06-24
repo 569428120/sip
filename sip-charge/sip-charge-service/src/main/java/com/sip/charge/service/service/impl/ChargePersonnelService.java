@@ -277,7 +277,6 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      *
      * @param personnelModel personnelModel
      */
-    @NonNull
     private void checkParams(@NonNull ChargePersonnelModel personnelModel) {
         // 学号不能重复
         List<ChargePersonnelModel> chargePersonnelModels = this.selectList(new QueryWrapper<ChargePersonnelModel>()
@@ -294,9 +293,26 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      * @param personnelModel personnelModel
      */
     @Override
-    public void updatePersonnel(ChargePersonnelModel personnelModel) {
+    public void updatePersonnel(@NonNull ChargePersonnelModel personnelModel) {
         this.checkParams(personnelModel);
-        this.insert(personnelModel);
+        if (personnelModel.getId() == null) {
+            log.error("personnelModel id is null");
+            throw new SipException("personnelModel id is null");
+        }
+        ChargePersonnelModel updateModel = this.getById(personnelModel.getId());
+        if (updateModel == null) {
+            log.error("updateModel id is null, by id {}", personnelModel.getId());
+            throw new SipException("updateModel id is null, by id " + personnelModel.getId());
+        }
+
+        updateModel.setName(personnelModel.getName());
+        updateModel.setStudentId(personnelModel.getStudentId());
+        updateModel.setClassCode(personnelModel.getClassCode());
+        updateModel.setBoardingCode(personnelModel.getBoardingCode());
+        updateModel.setRide(personnelModel.getRide());
+        updateModel.setRoutesCode(personnelModel.getRoutesCode());
+
+        this.updateById(updateModel);
     }
 
     /**

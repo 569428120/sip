@@ -7,12 +7,15 @@ import com.sip.charge.model.PersonnelReductionModel;
 import com.sip.charge.service.mapper.PersonnelReductionMapper;
 import com.sip.charge.service.service.IPersonnelReductionService;
 import com.sip.common.service.BaseService;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -77,6 +80,30 @@ public class PersonnelReductionService extends BaseService<PersonnelReductionMap
 
         if (!newModels.isEmpty()) {
             this.insertBatch(newModels);
+        }
+    }
+
+    /**
+     * 增加
+     *
+     * @param personnelIds   personnelIds
+     * @param reductionModel reductionModel
+     */
+    @Override
+    public void addPersonnelReductions(@NonNull List<String> personnelIds, @NonNull PersonnelReductionModel reductionModel) {
+        List<PersonnelReductionModel> personnelReductionModels = new ArrayList<>(personnelIds.size());
+        personnelIds.forEach(personnelId -> {
+            PersonnelReductionModel personnelReductionModel = new PersonnelReductionModel();
+            BeanUtils.copyProperties(reductionModel, personnelReductionModel);
+            // TODO 设置添加人
+            personnelReductionModel.setOperationId(-1L);
+            personnelReductionModel.setOperationName("test");
+            personnelReductionModel.setPersonnelId(Long.parseLong(personnelId));
+            personnelReductionModels.add(personnelReductionModel);
+        });
+
+        if (!personnelReductionModels.isEmpty()) {
+            this.insertBatch(personnelReductionModels);
         }
     }
 }

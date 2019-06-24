@@ -30,6 +30,6 @@ public class SysBoardingTypeController {
      */
     @GetMapping("/gets/all")
     public ResponseEntity<List<SysBoardingTypeModel>> getSysBoardings() {
-        return ResponseEntity.ok(sysBoardingTypeService.selectList(new QueryWrapper()));
+        return ResponseEntity.ok(sysBoardingTypeService.selectList(new QueryWrapper<SysBoardingTypeModel>()));
     }
 }

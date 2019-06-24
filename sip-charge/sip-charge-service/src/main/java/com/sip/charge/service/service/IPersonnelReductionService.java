@@ -30,4 +30,11 @@ public interface IPersonnelReductionService extends IBaseService<PersonnelReduct
      * @param reductionModels reductionModels
      */
     void putPersonnelReductions(List<String> personnelIds, List<PersonnelReductionModel> reductionModels);
+
+    /**
+     *    增加
+     * @param personnelIds personnelIds
+     * @param reductionModel reductionModel
+     */
+    void addPersonnelReductions(List<String> personnelIds, PersonnelReductionModel reductionModel);
 }
