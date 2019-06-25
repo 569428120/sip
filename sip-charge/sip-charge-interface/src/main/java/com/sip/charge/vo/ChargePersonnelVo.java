@@ -33,4 +33,9 @@ public class ChargePersonnelVo extends ChargePersonnelModel {
      */
     private List<PersonnelReductionModel> reductions;
 
+    /**
+     *  减免的总金额
+     */
+    private BigDecimal reductionAmountSum;
+
 }

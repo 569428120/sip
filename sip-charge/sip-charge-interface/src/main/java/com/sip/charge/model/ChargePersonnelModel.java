@@ -16,7 +16,7 @@ public class ChargePersonnelModel extends BaseModel {
     /**
      * 项目id
      */
-    private String projectId;
+    private Long projectId;
     /**
      * 学号
      */
