@@ -13,6 +13,7 @@ import java.util.List;
 /**
  *
  */
+@RestController
 @RequestMapping("/personnel-reduction")
 public class PersonnelReductionController {
 

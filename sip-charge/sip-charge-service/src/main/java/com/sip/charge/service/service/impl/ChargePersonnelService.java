@@ -2,15 +2,10 @@ package com.sip.charge.service.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.sip.charge.model.ChargeDetailsModel;
-import com.sip.charge.model.ChargePersonnelModel;
-import com.sip.charge.model.PersonnelContactModel;
-import com.sip.charge.model.PersonnelReductionModel;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.sip.charge.model.*;
 import com.sip.charge.service.mapper.ChargePersonnelMapper;
-import com.sip.charge.service.service.IChargeDetailsService;
-import com.sip.charge.service.service.IChargePersonnelService;
-import com.sip.charge.service.service.IPersonnelContactService;
-import com.sip.charge.service.service.IPersonnelReductionService;
+import com.sip.charge.service.service.*;
 import com.sip.charge.vo.ChargePersonnelVo;
 import com.sip.common.exception.SipException;
 import com.sip.common.service.BaseService;
@@ -23,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,9 +30,6 @@ import java.util.stream.Collectors;
 public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, ChargePersonnelModel> implements IChargePersonnelService {
 
     @Resource
-    private ChargePersonnelMapper personnelMapper;
-
-    @Resource
     private IPersonnelContactService personnelContactService;
 
     @Resource
@@ -44,6 +37,9 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
 
     @Resource
     private IChargeDetailsService chargeDetailsService;
+
+    @Resource
+    private ISysClassService sysClassService;
 
 
     /**
@@ -99,8 +95,10 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      * @param chargePersonnelModels chargePersonnelModels
      * @return Map<Long, List < ChargeDetailsModel>>
      */
-    private Map<Long, List<ChargeDetailsModel>> getChargeDetailsMap(List<ChargePersonnelModel> chargePersonnelModels) {
-        List<ChargeDetailsModel> chargeDetailsModels = chargeDetailsService.selectList(new QueryWrapper<>());
+    private Map<Long, List<ChargeDetailsModel>> getChargeDetailsMap(Long projectId, List<ChargePersonnelModel> chargePersonnelModels) {
+        List<ChargeDetailsModel> chargeDetailsModels = chargeDetailsService.selectList(new QueryWrapper<ChargeDetailsModel>()
+                .eq("project_id", projectId)
+        );
         Map<Long, List<ChargeDetailsModel>> reductionMap = new HashMap<>(chargePersonnelModels.size());
         if (chargeDetailsModels == null || chargeDetailsModels.isEmpty()) {
             return reductionMap;
@@ -151,9 +149,9 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      * @param chargePersonnelModels chargePersonnelModels
      * @return Map<Long, BigDecimal>
      */
-    private Map<Long, BigDecimal> getChargeDetailsAmountSumMap(List<ChargePersonnelModel> chargePersonnelModels) {
+    private Map<Long, BigDecimal> getChargeDetailsAmountSumMap(Long projectId, List<ChargePersonnelModel> chargePersonnelModels) {
         Map<Long, BigDecimal> amountMap = new HashMap<>(chargePersonnelModels.size());
-        Map<Long, List<ChargeDetailsModel>> detailsMap = this.getChargeDetailsMap(chargePersonnelModels);
+        Map<Long, List<ChargeDetailsModel>> detailsMap = this.getChargeDetailsMap(projectId, chargePersonnelModels);
         if (detailsMap == null || detailsMap.isEmpty()) {
             return amountMap;
         }
@@ -162,6 +160,24 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
             amountMap.put(id, amountSum);
         });
         return amountMap;
+    }
+
+    /**
+     * 班级信息
+     *
+     * @param chargePersonnelModels chargePersonnelModels
+     * @return Map<String, SysClassModel>
+     */
+    private Map<String, SysClassModel> getClassModelMap(@NotNull List<ChargePersonnelModel> chargePersonnelModels) {
+        Set<String> classCodes = chargePersonnelModels.stream().map(ChargePersonnelModel::getClassCode).collect(Collectors.toSet());
+        List<SysClassModel> sysClassModels = sysClassService.selectList(new QueryWrapper<SysClassModel>()
+                .in("class_code", classCodes)
+        );
+        Map<String, SysClassModel> codeSysClassModelMap = new HashMap<>(sysClassModels.size());
+        sysClassModels.forEach(item -> {
+            codeSysClassModelMap.put(item.getClassCode(), item);
+        });
+        return codeSysClassModelMap;
     }
 
     /**
@@ -175,7 +191,14 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
     @Override
     public PageResult<ChargePersonnelVo> getChargePersonnelVoListPage(ChargePersonnelModel personnelModel, Integer page, Integer pageSize) {
 
-        List<ChargePersonnelModel> chargePersonnelModels = personnelMapper.getChargePersonnelModelsPage(personnelModel, page, pageSize);
+        PageResult<ChargePersonnelModel> personnelModelPageResult = this.selectPage(new Page<>(page, pageSize), new QueryWrapper<ChargePersonnelModel>()
+                .eq("project_id", personnelModel.getProjectId())
+                .like(StringUtils.isNotBlank(personnelModel.getStudentId()), "student_id", personnelModel.getStudentId())
+                .like(StringUtils.isNotBlank(personnelModel.getName()), "name", personnelModel.getName())
+        );
+
+        List<ChargePersonnelModel> chargePersonnelModels = personnelModelPageResult.getData();
+
         if (chargePersonnelModels == null || chargePersonnelModels.isEmpty()) {
             log.info("chargePersonnelModels is null");
             return new PageResult<>(0L, Collections.emptyList());
@@ -190,13 +213,15 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
         Map<Long, List<PersonnelReductionModel>> reductionMap = this.getPersonnelReductionMap(chargePersonnelIds);
 
         // 费用信息
-        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModels);
+        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(personnelModel.getProjectId(), chargePersonnelModels);
+
+        // 班级信息
+        Map<String, SysClassModel> classModelMap = this.getClassModelMap(chargePersonnelModels);
 
         // 转换为VO
-        List<ChargePersonnelVo> chargePersonnelVos = chargePersonnelModels.stream().map(item -> this.newChargePersonnelVo(item, contactMap, reductionMap, chargeDetailsMap)).collect(Collectors.toList());
+        List<ChargePersonnelVo> chargePersonnelVos = chargePersonnelModels.stream().map(item -> this.newChargePersonnelVo(item, contactMap, reductionMap, chargeDetailsMap, classModelMap)).collect(Collectors.toList());
 
-        Long count = personnelMapper.getChargePersonnelModelsCount(personnelModel);
-        return new PageResult<>(count, chargePersonnelVos);
+        return new PageResult<>(personnelModelPageResult.getTotal(), chargePersonnelVos);
     }
 
 
@@ -207,19 +232,32 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      * @param contactMap       联系人
      * @param reductionMap     减免
      * @param chargeDetailsMap 收费项
+     * @param classModelMap    班级
      * @return ChargePersonnelVo
      */
-    private ChargePersonnelVo newChargePersonnelVo(ChargePersonnelModel model, Map<Long, List<PersonnelContactModel>> contactMap,
-                                                   Map<Long, List<PersonnelReductionModel>> reductionMap, Map<Long, BigDecimal> chargeDetailsMap) {
+    private ChargePersonnelVo newChargePersonnelVo(ChargePersonnelModel model,
+                                                   Map<Long, List<PersonnelContactModel>> contactMap,
+                                                   Map<Long, List<PersonnelReductionModel>> reductionMap,
+                                                   Map<Long, BigDecimal> chargeDetailsMap,
+                                                   Map<String, SysClassModel> classModelMap) {
         ChargePersonnelVo vo = new ChargePersonnelVo();
         BeanUtils.copyProperties(model, vo);
         // 设置联系方式
         vo.setContacts(contactMap.get(vo.getId()));
+
+        List<PersonnelReductionModel> reductionModels = reductionMap.get(vo.getId());
         // 设置减免信息
-        vo.setReductions(reductionMap.get(vo.getId()));
+        vo.setReductions(reductionModels);
+        // 减免总金额
+        if (reductionModels != null && !reductionModels.isEmpty()) {
+            vo.setReductionAmountSum(reductionModels.stream().map(PersonnelReductionModel::getAmount).reduce(BigDecimal::add).get());
+        }
+
         // 金额
         vo.setAmountSum(chargeDetailsMap.get(vo.getId()));
-
+        // 班级名称
+        SysClassModel sysClassModel = classModelMap.get(vo.getClassCode());
+        vo.setClassName(sysClassModel.getGrade() + sysClassModel.getClassName());
         return vo;
     }
 
@@ -247,9 +285,11 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
         // 减免信息
         Map<Long, List<PersonnelReductionModel>> reductionMap = this.getPersonnelReductionMap(chargePersonnelIds);
         // 费用信息
-        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModels);
+        Map<Long, BigDecimal> chargeDetailsMap = this.getChargeDetailsAmountSumMap(chargePersonnelModel.getProjectId(), chargePersonnelModels);
+        // 班级信息
+        Map<String, SysClassModel> classModelMap = this.getClassModelMap(chargePersonnelModels);
 
-        return this.newChargePersonnelVo(chargePersonnelModel, contactMap, reductionMap, chargeDetailsMap);
+        return this.newChargePersonnelVo(chargePersonnelModel, contactMap, reductionMap, chargeDetailsMap, classModelMap);
     }
 
     /**
@@ -294,7 +334,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public void updatePersonnel(@NonNull ChargePersonnelModel personnelModel) {
-        this.checkParams(personnelModel);
+        //this.checkParams(personnelModel);
         if (personnelModel.getId() == null) {
             log.error("personnelModel id is null");
             throw new SipException("personnelModel id is null");
@@ -322,7 +362,7 @@ public class ChargePersonnelService extends BaseService<ChargePersonnelMapper, C
      */
     @Override
     public void createPersonnel(ChargePersonnelModel personnelModel) {
-        this.checkParams(personnelModel);
-        this.updateById(personnelModel);
+        //this.checkParams(personnelModel);
+        this.insert(personnelModel);
     }
 }
