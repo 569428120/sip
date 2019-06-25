@@ -1,6 +1,7 @@
 package com.sip.common.model;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.util.Date;
@@ -19,11 +20,13 @@ public class BaseModel {
     /**
      * 创建时间
      */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     @TableField(fill = FieldFill.INSERT)
     private Date createTime;
     /**
      * 更新时间
      */
+    @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd")
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Date modifyTime;
 
