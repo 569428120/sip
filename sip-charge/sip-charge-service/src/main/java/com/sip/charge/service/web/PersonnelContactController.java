@@ -45,6 +45,19 @@ public class PersonnelContactController {
     }
 
     /**
+     * 添加
+     *
+     * @param contactModel 数据
+     * @return ResponseEntity<String>
+     */
+    @PostMapping("/posts/post-by-personnel-id")
+    public ResponseEntity<String> addPersonnelContactModel(@RequestBody PersonnelContactModel contactModel,
+                                                           @RequestParam(value = "personnelId", defaultValue = "") String personnelId) {
+        personnelContactService.addPersonnelContactModel(Long.parseLong(personnelId), contactModel);
+        return ResponseEntity.ok("update success");
+    }
+
+    /**
      * 更新
      *
      * @param contactModels 数据

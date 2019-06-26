@@ -33,4 +33,10 @@ public interface IPersonnelContactService extends IBaseService<PersonnelContactM
      */
     void putPersonnelContacts(List<String> personnelIds, List<PersonnelContactModel> contactModels);
 
+    /**
+     *  添加
+     * @param personnelId personnelId
+     * @param contactModel contactModel
+     */
+    void addPersonnelContactModel(Long personnelId, PersonnelContactModel contactModel);
 }

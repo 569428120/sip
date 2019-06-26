@@ -7,6 +7,7 @@ import com.sip.charge.model.ChargePersonnelModel;
 import com.sip.charge.model.PersonnelContactModel;
 import com.sip.charge.service.mapper.PersonnelContactMapper;
 import com.sip.charge.service.service.IPersonnelContactService;
+import com.sip.common.exception.SipException;
 import com.sip.common.service.BaseService;
 import com.sip.common.vo.PageResult;
 import lombok.NonNull;
@@ -87,5 +88,21 @@ public class PersonnelContactService extends BaseService<PersonnelContactMapper,
         }
 
 
+    }
+
+    /**
+     * 添加
+     *
+     * @param personnelId  personnelId
+     * @param contactModel contactModel
+     */
+    @Override
+    public void addPersonnelContactModel(Long personnelId, PersonnelContactModel contactModel) {
+        if (personnelId == null || contactModel == null) {
+            log.error("personnelId or contactModel is null");
+            throw new SipException("personnelId or contactModel is null");
+        }
+        contactModel.setPersonnelId(personnelId);
+        this.insert(contactModel);
     }
 }
