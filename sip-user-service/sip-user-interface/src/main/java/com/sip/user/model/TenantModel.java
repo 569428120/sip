@@ -1,4 +1,4 @@
-package com.sip.auth.model;
+package com.sip.user.model;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.sip.common.model.BaseModel;

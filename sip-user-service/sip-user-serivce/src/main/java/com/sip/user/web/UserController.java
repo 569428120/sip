@@ -1,6 +1,6 @@
 package com.sip.user.web;
 
-import com.leyou.user.pojo.User;
+import com.sip.user.pojo.User;
 import com.sip.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

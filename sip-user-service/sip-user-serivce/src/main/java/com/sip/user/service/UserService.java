@@ -1,10 +1,9 @@
 package com.sip.user.service;
 
-import com.sip.common.enums.ExceptionEnum;
 import com.sip.common.exception.SipException;
 import com.sip.common.utils.NumberUtils;
 import com.sip.user.mapper.UserMapper;
-import com.leyou.user.pojo.User;
+import com.sip.user.pojo.User;
 import com.sip.user.utils.CodecUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;

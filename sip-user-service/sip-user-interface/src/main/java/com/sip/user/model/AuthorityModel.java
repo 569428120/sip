@@ -1,4 +1,4 @@
-package com.sip.auth.model;
+package com.sip.user.model;
 
 public class AuthorityModel {
     public static final String AUTHORITY_TYPE_SYSTEM = "system";
